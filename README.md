@@ -1,39 +1,35 @@
 BarcodeGeminiSync
-BarcodeGeminiSync is a .NET 10 worker service designed to automate the process of cataloging physical items. It watches a local directory for new product photos (e.g., taken from a smartphone), uses the Gemini 2.0 Flash API to perform OCR and product identification, and syncs the results—including timestamps, barcodes, and descriptions—directly to a Google Sheet.
+BarcodeGeminiSync is a .NET 10 worker service that automates product cataloging by watching a local folder for photos, using Gemini 3 Flash to extract data via AI vision, and syncing results directly to Google Sheets. It is designed to bridge the gap between physical inventory and digital organization by monitoring a directory—such as one synced with a smartphone's camera roll—to catalog items in real-time.
 
 Features
-Automated File Watching: Monitors a designated folder for new .jpg files.
+Automated Monitoring: Uses FileSystemWatcher to detect new .jpg files in a configured "WatchPath".
 
-AI-Powered Vision: Leverages Gemini 3 Flash to extract barcodes, product names, brands, and brief descriptions from images.
+AI Vision Processing: Leverages Gemini 3 Flash to identify products and extract barcode strings (8-14 digits) from images.
 
-Google Sheets Integration: Automatically appends scan data to a spreadsheet, creating a new one or a specific scanned_barcodes tab if they don't exist.
+Google Sheets Integration: Automatically appends scan details, including timestamps, barcodes, product info, and local file links, to a scanned_barcodes worksheet.
 
-Resilient Processing: Includes built-in retry logic and configurable timeouts to handle API fluctuations.
+Resilient Processing: Includes retry logic and a 5-minute HttpClient timeout to handle high-resolution image uploads.
 
-Structured Logging: Uses Serilog for detailed console and rolling file logs.
+Structured Logging: Implements comprehensive daily rolling file logs and console output via Serilog.
 
 Tech Stack
-.NET 10
+Framework: .NET 10
 
-Google Gemini API (Generative AI)
+AI: Google Gemini API (Generative AI)
 
-Google Sheets API v4
+Cloud: Google Sheets API v4
 
-Serilog (Logging)
+Logging: Serilog
 
 Prerequisites
-Google Cloud Project:
+Google Cloud Project: Enable the Google Sheets API and create a Service Account.
 
-Enable the Google Sheets API.
+Gemini API Key: Obtain a key from Google AI Studio.
 
-Create a Service Account and download the JSON credentials file.
-
-Gemini API Key: Obtain an API key from Google AI Studio.
-
-Target Folder: A local directory (like a synced Dropbox or OneDrive folder) where your phone saves images.
+Target Folder: A local directory (like a synced Dropbox or OneDrive folder) where images are saved.
 
 Configuration
-Update appsettings.json with your specific details:
+Update appsettings.json with your credentials:
 
 JSON
 {
@@ -48,34 +44,14 @@ JSON
     "WatchPath": "C:\\Users\\Name\\Pictures\\Scans"
   }
 }
-Note: If SpreadsheetId is left blank, the application will create a new sheet titled "Scanned Barcodes" on the first run.
+Note: If SpreadsheetId is empty, the application will attempt to create a new sheet titled "Scanned Barcodes" on the first run.
 
-Important: Google Sheets Permissions
-For the application to write data to an existing spreadsheet, you must share the Google Sheet with your service account email address (found in your service account JSON file) and grant it Editor permissions.
+Important: Permissions
+To allow the service to write data, you must share your Google Sheet with the Service Account email address (found in your JSON credentials file) and grant it Editor permissions.
 
-Setup and Installation
-Clone the repository:
+Installation
+Clone the repository: git clone <your-repo-url>
 
-Bash
-git clone https://github.com/yourusername/BarcodeGeminiSync.git
-cd BarcodeGeminiSync
-Restore dependencies:
+Restore dependencies: dotnet restore
 
-Bash
-dotnet restore
-User Secrets (Optional): Instead of appsettings.json, you can use .NET User Secrets to store your sensitive API keys:
-
-Bash
-dotnet user-secrets set "Gemini:ApiKey" "your_key"
-Run the application:
-
-Bash
-dotnet run
-How It Works
-Detection: The service detects a new .jpg in the WatchPath.
-
-Analysis: The image is sent to Gemini with a system prompt to extract structured JSON containing the barcode and product details.
-
-Verification: The service uses regex to validate barcode formats (8-14 digits) to ensure data accuracy.
-
-Sync: The data is appended as a new row in the specified Google Sheet with a relative path link to the original image.
+Run the application: dotnet run
